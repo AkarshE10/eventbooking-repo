@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Event Booking Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0078d4;
+            --primary-hover: #106ebe;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #d1d5db;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 460px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+        .header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .header p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        #responseMessage {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+        .alert-success {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            display: block !important;
+        }
+        .alert-error {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            display: block !important;
+        }
+        .alert-loading {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="header">
+            <h2>Event Registration</h2>
+            <p>Cloud-Powered Enterprise Booking Portal</p>
+        </div>
+        
+        <form id="bookingForm" onsubmit="event.preventDefault(); submitRegistration();">
+            <div class="form-group">
+                <label for="userName">Full Name</label>
+                <input type="text" id="userName" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="userEmail">Email Address</label>
+                <input type="email" id="userEmail" placeholder="Enter your email address" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tickets">Number of Tickets</label>
+                <input type="number" id="tickets" value="1" min="1" max="10" required>
+            </div>
+
+            <button type="submit" id="submitBtn">Confirm Booking</button>
+        </form>
+
+        <div id="responseMessage"></div>
+    </div>
+
+    <script>
+        async function submitRegistration() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const tickets = document.getElementById('tickets').value;
+            const messageEl = document.getElementById('responseMessage');
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Processing...";
+            messageEl.className = "alert-loading";
+            messageEl.innerText = "Connecting to Azure backend...";
+
+            try {
+                const response = await fetch('https://func-eventbooking-prod.azurewebsites.net/api/ProcessRegistration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        eventId: "EVT-101", 
+                        userEmail: email,
+                        userName: name,
+                        ticketCount: parseInt(tickets)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 201 || response.ok) {
+                    messageEl.className = "alert-success";
+                    messageEl.innerHTML = `<strong>Success!</strong> Booking registered.<br><strong>Booking ID:</strong> ${data.bookingId || 'BOOKING-001'}`;
+                } else {
+                    messageEl.className = "alert-error";
+                    messageEl.innerText = "Error: " + (data.message || "Failed to process request.");
+                }
+            } catch (error) {
+                messageEl.className = "alert-error";
+                messageEl.innerText = "Connection failed. Check your network or CORS policy.";
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Confirm Booking";
+            }
+        }
+    </script>
+</body>
+</html>
