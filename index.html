@@ -164,7 +164,7 @@
             messageEl.innerText = "Connecting to Azure backend...";
 
             try {
-                const response = await fetch('https://func-eventbooking-prod.azurewebsites.net/api/ProcessRegistration', {
+                const response = await fetch('https://func-eventbooking-prod-h8h3gyerb6dyechb.southafricanorth-01.azurewebsites.net/api/ProcessRegistration', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
