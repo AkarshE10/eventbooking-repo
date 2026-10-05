@@ -8,10 +8,16 @@ const cosmosOutput = output.cosmosDB({
     createIfNotExists: false
 });
 
+// Define Service Bus Queue Output Binding
+const serviceBusOutput = output.serviceBusQueue({
+    queueName: 'booking-queue',
+    connection: 'ServiceBusConnection'
+});
+
 app.http('ProcessRegistration', {
     methods: ['POST'],
     authLevel: 'anonymous',
-    extraOutputs: [cosmosOutput],
+    extraOutputs: [cosmosOutput, serviceBusOutput],
     handler: async (request, context) => {
         context.log('Processing event registration request...');
 
@@ -27,7 +33,7 @@ app.http('ProcessRegistration', {
                 };
             }
 
-            // Construct the booking record for Cosmos DB
+            // Construct the booking record
             const bookingRecord = {
                 id: body.id || `booking-${Date.now()}`,
                 eventId: body.eventId,
@@ -38,8 +44,11 @@ app.http('ProcessRegistration', {
                 createdAt: new Date().toISOString()
             };
 
-            // Write record directly to Cosmos DB container
+            // 1. Write record to Cosmos DB container
             context.extraOutputs.set(cosmosOutput, bookingRecord);
+
+            // 2. Send record to Azure Service Bus Queue to trigger Logic App
+            context.extraOutputs.set(serviceBusOutput, bookingRecord);
 
             return {
                 status: 201,
