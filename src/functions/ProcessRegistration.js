@@ -9,7 +9,7 @@ const cosmosOutput = output.cosmosDB({
 });
 
 // Define Service Bus Queue Output Binding
-const serviceBusOutput = output.serviceBusQueue({
+const serviceBusOutput = output.serviceBus({
     queueName: 'booking-queue',
     connection: 'ServiceBusConnection'
 });
