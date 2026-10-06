@@ -2,7 +2,7 @@
   "name": "eventbooking-backend",
   "version": "1.0.0",
   "description": "Serverless Online Event Registration and Booking System",
-  "main": "src/**/*.js",
+  "main": "src/functions/*.js",
   "scripts": {
     "build": "echo no build needed",
     "start": "func start"
