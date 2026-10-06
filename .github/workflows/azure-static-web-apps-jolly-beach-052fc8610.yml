@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: false
@@ -31,6 +31,7 @@ jobs:
           api_location: "/"
           output_location: ""
           skip_app_build: false
+          app_build_command: "echo No build required"
           api_build_command: "npm install"
           node_version: "18.x"
           ###### End of Repository/Build Configurations ######
