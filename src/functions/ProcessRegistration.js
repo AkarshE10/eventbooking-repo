@@ -24,22 +24,28 @@ app.http('ProcessRegistration', {
         try {
             const body = await request.json();
 
-            // Validate required request payload fields
-            if (!body || !body.eventId || !body.userEmail) {
+            // Extract fields with fallbacks for flexible payload parsing
+            const userEmail = body.userEmail || body.email;
+            const eventId = body.eventId || 'EVT-101';
+            const userName = body.userName || body.name || 'Guest User';
+            const tickets = parseInt(body.tickets || body.ticketCount || 1, 10);
+
+            // Validate email field presence
+            if (!body || !userEmail) {
                 return {
                     status: 400,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: 'Missing required fields: eventId and userEmail' })
+                    body: JSON.stringify({ message: 'Missing required field: Email Address' })
                 };
             }
 
             // Construct the booking record
             const bookingRecord = {
                 id: body.id || `booking-${Date.now()}`,
-                eventId: body.eventId,
-                userEmail: body.userEmail,
-                userName: body.userName || 'Guest User',
-                tickets: body.tickets || body.ticketCount || 1,
+                eventId: eventId,
+                userEmail: userEmail,
+                userName: userName,
+                tickets: tickets,
                 status: 'Confirmed',
                 createdAt: new Date().toISOString()
             };
