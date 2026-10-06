@@ -4,6 +4,7 @@
   "description": "Serverless Online Event Registration and Booking System",
   "main": "src/functions/*.js",
   "scripts": {
+    "build": "echo no build needed",
     "start": "func start"
   },
   "dependencies": {
