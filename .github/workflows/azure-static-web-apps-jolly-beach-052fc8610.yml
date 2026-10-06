@@ -30,10 +30,7 @@ jobs:
           app_location: "/"
           api_location: "/"
           output_location: ""
-          skip_app_build: false
-          app_build_command: "echo No build required"
-          api_build_command: "npm install"
-          node_version: "18.x"
+          skip_app_build: true
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
