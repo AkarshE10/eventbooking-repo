@@ -21,6 +21,14 @@ app.http('ProcessRegistration', {
     handler: async (request, context) => {
         context.log('Processing event registration request...');
 
+        // Return a quick response for browser GET checks
+        if (request.method === 'GET') {
+            return { 
+                status: 200, 
+                body: JSON.stringify({ message: "ProcessRegistration API is active and ready." }) 
+            };
+        }
+
         try {
             const body = await request.json();
 
@@ -39,38 +47,32 @@ app.http('ProcessRegistration', {
                 };
             }
 
-            // Construct the booking record
-            const bookingRecord = {
-                id: body.id || `booking-${Date.now()}`,
-                eventId: eventId,
-                userEmail: userEmail,
-                userName: userName,
-                tickets: tickets,
-                status: 'Confirmed',
-                createdAt: new Date().toISOString()
+            // Create record object
+            const registrationRecord = {
+                id: `${eventId}-${Date.now()}`,
+                eventId,
+                userName,
+                userEmail,
+                tickets,
+                registeredAt: new Date().toISOString()
             };
 
-            // 1. Write record to Cosmos DB container
-            context.extraOutputs.set(cosmosOutput, bookingRecord);
-
-            // 2. Send record to Azure Service Bus Queue to trigger Logic App
-            context.extraOutputs.set(serviceBusOutput, bookingRecord);
+            // Set outputs for Cosmos DB and Service Bus
+            context.extraOutputs.set(cosmosOutput, registrationRecord);
+            context.extraOutputs.set(serviceBusOutput, registrationRecord);
 
             return {
                 status: 201,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: 'Registration successful!',
-                    bookingId: bookingRecord.id,
-                    details: bookingRecord
-                })
+                body: JSON.stringify({ message: 'Registration successful!', booking: registrationRecord })
             };
+
         } catch (error) {
-            context.log(`Error processing registration: ${error.message}`);
+            context.error(`Error processing request: ${error.message}`);
             return {
                 status: 500,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: 'Internal Server Error', error: error.message })
+                body: JSON.stringify({ message: 'Internal server error', error: error.message })
             };
         }
     }
