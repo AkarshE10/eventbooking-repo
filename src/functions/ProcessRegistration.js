@@ -15,7 +15,7 @@ const serviceBusOutput = output.serviceBus({
 });
 
 app.http('ProcessRegistration', {
-    methods: ['POST'],
+    methods: ['GET', 'POST'],
     authLevel: 'anonymous',
     extraOutputs: [cosmosOutput, serviceBusOutput],
     handler: async (request, context) => {
@@ -39,7 +39,7 @@ app.http('ProcessRegistration', {
                 eventId: body.eventId,
                 userEmail: body.userEmail,
                 userName: body.userName || 'Guest User',
-                tickets: body.tickets || 1,
+                tickets: body.tickets || body.ticketCount || 1,
                 status: 'Confirmed',
                 createdAt: new Date().toISOString()
             };
