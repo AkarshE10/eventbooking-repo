@@ -1,45 +1,30 @@
-const { app, output } = require('@azure/functions');
-
-// Define Cosmos DB Output Binding
-const cosmosOutput = output.cosmosDB({
-    databaseName: 'EventDB',
-    containerName: 'Bookings',
-    connection: 'CosmosDBConnection',
-    createIfNotExists: false
-});
-
-// Define Service Bus Queue Output Binding
-const serviceBusOutput = output.serviceBus({
-    queueName: 'booking-queue',
-    connection: 'ServiceBusConnection'
-});
+const { app } = require('@azure/functions');
+const { CosmosClient } = require('@azure/cosmos');
+const { ServiceBusClient } = require('@azure/service-bus');
 
 app.http('ProcessRegistration', {
     methods: ['GET', 'POST'],
     authLevel: 'anonymous',
-    extraOutputs: [cosmosOutput, serviceBusOutput],
     handler: async (request, context) => {
         context.log('Processing event registration request...');
 
-        // Handle GET browser checks safely without parsing an empty JSON body
+        // Safe GET health check for browser testing
         if (request.method === 'GET') {
             return { 
                 status: 200, 
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: "ProcessRegistration API is active and ready to process registrations." }) 
+                body: JSON.stringify({ message: "ProcessRegistration API is active and ready." }) 
             };
         }
 
         try {
             const body = await request.json();
 
-            // Extract fields with fallbacks for flexible payload parsing
             const userEmail = body.userEmail || body.email;
             const eventId = body.eventId || 'EVT-101';
             const userName = body.userName || body.name || 'Guest User';
             const tickets = parseInt(body.tickets || body.ticketCount || 1, 10);
 
-            // Validate email field presence
             if (!body || !userEmail) {
                 return {
                     status: 400,
@@ -48,7 +33,6 @@ app.http('ProcessRegistration', {
                 };
             }
 
-            // Create record object
             const registrationRecord = {
                 id: `${eventId}-${Date.now()}`,
                 eventId,
@@ -58,9 +42,22 @@ app.http('ProcessRegistration', {
                 registeredAt: new Date().toISOString()
             };
 
-            // Send outputs to Cosmos DB and Service Bus
-            context.extraOutputs.set(cosmosOutput, registrationRecord);
-            context.extraOutputs.set(serviceBusOutput, registrationRecord);
+            // 1. Write record to Cosmos DB
+            const cosmosConn = process.env.CosmosDBConnection;
+            if (cosmosConn) {
+                const cosmosClient = new CosmosClient(cosmosConn);
+                const container = cosmosClient.database('EventDB').container('Bookings');
+                await container.items.create(registrationRecord);
+            }
+
+            // 2. Publish message to Service Bus Queue
+            const sbConn = process.env.ServiceBusConnection;
+            if (sbConn) {
+                const sbClient = new ServiceBusClient(sbConn);
+                const sender = sbClient.createSender('booking-queue');
+                await sender.sendMessages({ body: registrationRecord });
+                await sbClient.close();
+            }
 
             return {
                 status: 201,
