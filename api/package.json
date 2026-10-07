@@ -1,18 +1,17 @@
 {
   "name": "eventbooking-backend",
   "version": "1.0.0",
-  "description": "Serverless Online Event Registration and Booking System",
   "main": "src/functions/*.js",
   "scripts": {
-    "build": "echo no build needed",
-    "start": "func start"
+    "start": "func start",
+    "build": "echo no build needed"
+  },
+  "dependencies": {
+    "@azure/cosmos": "^4.2.0",
+    "@azure/functions": "^4.6.0",
+    "@azure/service-bus": "^7.9.5"
   },
   "engines": {
     "node": "20.x"
-  },
-  "dependencies": {
-    "@azure/functions": "^4.0.0",
-    "@azure/cosmos": "^4.0.0",
-    "@azure/service-bus": "^7.9.0"
   }
 }
