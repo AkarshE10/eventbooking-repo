@@ -1,7 +1,7 @@
 {
   "name": "eventbooking-backend",
   "version": "1.0.0",
-  "main": "src/functions/*.js",
+  "main": "src/functions/ProcessRegistration.js",
   "scripts": {
     "start": "func start",
     "build": "echo no build needed"
