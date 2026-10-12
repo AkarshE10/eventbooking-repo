@@ -8,7 +8,6 @@ app.http('ProcessRegistration', {
     handler: async (request, context) => {
         context.log('Processing event registration request...');
 
-        // Safe GET health check for browser testing
         if (request.method === 'GET') {
             return { 
                 status: 200, 
@@ -22,9 +21,10 @@ app.http('ProcessRegistration', {
 
             const userEmail = body.userEmail || body.email;
             const eventId = body.eventId || 'EVT-101';
-            const eventName = body.eventName || 'General Event'; // Added eventName support
+            const eventName = body.eventName || 'General Event';
             const userName = body.userName || body.name || 'Guest User';
             const tickets = parseInt(body.tickets || body.ticketCount || 1, 10);
+            const totalAmount = body.totalAmount || (tickets * 500);
 
             if (!body || !userEmail) {
                 return {
@@ -37,10 +37,11 @@ app.http('ProcessRegistration', {
             const registrationRecord = {
                 id: `${eventId}-${Date.now()}`,
                 eventId,
-                eventName, // Included in the saved record
+                eventName,
                 userName,
                 userEmail,
                 tickets,
+                totalAmount,
                 registeredAt: new Date().toISOString()
             };
 

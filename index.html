@@ -37,7 +37,7 @@
             justify-content: space-between;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
-            height: 380px;
+            height: 390px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -46,7 +46,6 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
         }
 
-        /* Background Images for Cards */
         .card-tech {
             background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(15, 23, 42, 0.9) 80%), 
                         url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80') center/cover;
@@ -78,8 +77,15 @@
         .event-date { 
             color: #38bdf8; 
             font-size: 15px; 
-            margin-bottom: 20px; 
+            margin-bottom: 5px; 
             font-weight: 600; 
+        }
+
+        .event-price {
+            color: #facc15;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
         }
 
         .btn-book { 
@@ -100,7 +106,6 @@
             background: linear-gradient(135deg, #0369a1 0%, #075985 100%); 
         }
         
-        /* Modal Form */
         .modal { 
             display: none; 
             position: fixed; 
@@ -155,6 +160,17 @@
             border-color: #38bdf8;
         }
 
+        .price-summary {
+            background-color: #0f172a;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px dashed #38bdf8;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: #facc15;
+        }
+
         #status-message { 
             margin-top: 15px; 
             padding: 12px; 
@@ -181,7 +197,8 @@
             <div class="card-content">
                 <h3>Cloud Tech Summit 2026</h3>
                 <p class="event-date">📅 Date: Oct 25, 2026</p>
-                <button class="btn-book" onclick="openBooking('EVT-TECH-101', 'Cloud Tech Summit 2026')">Book Tickets</button>
+                <p class="event-price">🎟️ Price: ₹500 / ticket</p>
+                <button class="btn-book" onclick="openBooking('EVT-TECH-101', 'Cloud Tech Summit 2026', 500)">Book Tickets</button>
             </div>
         </div>
 
@@ -190,7 +207,8 @@
             <div class="card-content">
                 <h3>Grand Music Fest</h3>
                 <p class="event-date">📅 Date: Nov 02, 2026</p>
-                <button class="btn-book" onclick="openBooking('EVT-MUSIC-202', 'Grand Music Fest')">Book Tickets</button>
+                <p class="event-price">🎟️ Price: ₹750 / ticket</p>
+                <button class="btn-book" onclick="openBooking('EVT-MUSIC-202', 'Grand Music Fest', 750)">Book Tickets</button>
             </div>
         </div>
 
@@ -199,7 +217,8 @@
             <div class="card-content">
                 <h3>National Dance Gala</h3>
                 <p class="event-date">📅 Date: Nov 15, 2026</p>
-                <button class="btn-book" onclick="openBooking('EVT-DANCE-303', 'National Dance Gala')">Book Tickets</button>
+                <p class="event-price">🎟️ Price: ₹400 / ticket</p>
+                <button class="btn-book" onclick="openBooking('EVT-DANCE-303', 'National Dance Gala', 400)">Book Tickets</button>
             </div>
         </div>
     </div>
@@ -212,6 +231,7 @@
             <form id="bookingForm">
                 <input type="hidden" id="eventId">
                 <input type="hidden" id="eventName">
+                <input type="hidden" id="ticketPrice">
                 <div class="form-group">
                     <label>Full Name</label>
                     <input type="text" id="userName" placeholder="Enter your full name" required>
@@ -222,7 +242,10 @@
                 </div>
                 <div class="form-group">
                     <label>Number of Tickets</label>
-                    <input type="number" id="tickets" min="1" max="5" value="1" required>
+                    <input type="number" id="tickets" min="1" max="5" value="1" oninput="updateTotalPrice()" required>
+                </div>
+                <div class="price-summary" id="priceSummary">
+                    Total Amount: ₹0
                 </div>
                 <button type="submit" class="btn-book">Confirm Booking</button>
             </form>
@@ -231,11 +254,24 @@
     </div>
 
     <script>
-        function openBooking(id, name) {
+        let currentUnitPrice = 0;
+
+        function openBooking(id, name, price) {
             document.getElementById('eventId').value = id;
             document.getElementById('eventName').value = name;
+            document.getElementById('ticketPrice').value = price;
+            currentUnitPrice = price;
+            
             document.getElementById('modalTitle').innerText = 'Book ' + name;
+            document.getElementById('tickets').value = 1;
+            updateTotalPrice();
             document.getElementById('bookingModal').style.display = 'flex';
+        }
+
+        function updateTotalPrice() {
+            const count = Number(document.getElementById('tickets').value) || 1;
+            const total = count * currentUnitPrice;
+            document.getElementById('priceSummary').innerText = `Total Amount: ₹${total} (₹${currentUnitPrice} x ${count})`;
         }
 
         function closeModal() {
@@ -250,12 +286,16 @@
             statusDiv.className = 'success';
             statusDiv.innerText = 'Processing booking...';
 
+            const ticketsCount = Number(document.getElementById('tickets').value);
+            const totalAmount = ticketsCount * currentUnitPrice;
+
             const payload = {
                 eventId: document.getElementById('eventId').value,
                 eventName: document.getElementById('eventName').value,
                 userName: document.getElementById('userName').value,
                 userEmail: document.getElementById('userEmail').value,
-                tickets: Number(document.getElementById('tickets').value)
+                tickets: ticketsCount,
+                totalAmount: totalAmount
             };
 
             try {
